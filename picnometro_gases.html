@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Picnómetro">
+<title>Picnómetro de Gases</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d0f12;
+    --surface: #161a1f;
+    --surface2: #1e2328;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8eaed;
+    --text2: #8a9099;
+    --text3: #555d66;
+    --accent: #4af0a8;
+    --accent-dim: rgba(74,240,168,0.12);
+    --accent-dim2: rgba(74,240,168,0.06);
+    --danger: #ff6b6b;
+    --danger-dim: rgba(255,107,107,0.1);
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: env(safe-area-inset-top, 20px) 0 calc(env(safe-area-inset-bottom, 0px) + 32px);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Header */
+  .header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .header-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-tag::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 3px;
+    font-weight: 300;
+  }
+
+  /* Sections */
+  .section {
+    padding: 20px 24px 0;
+  }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* Fields */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .field-row:last-child { margin-bottom: 0; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 11px;
+    color: var(--text2);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+  .field input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 15px;
+    font-family: var(--mono);
+    color: var(--text);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .field input:focus {
+    border-color: var(--accent);
+  }
+  .field input::placeholder {
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 24px;
+  }
+
+  /* Pressure table */
+  .p-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+  }
+  .p-table thead th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    padding: 0 0 6px;
+    text-align: left;
+    font-weight: 400;
+  }
+  .p-table thead th:first-child { width: 28px; }
+  .p-table tbody td { padding: 3px 4px 3px 0; vertical-align: middle; }
+  .p-table tbody td:first-child {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    padding-right: 8px;
+  }
+
+  /* Averages */
+  .avg-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .avg-pill {
+    background: var(--accent-dim2);
+    border: 1px solid rgba(74,240,168,0.15);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    flex: 1;
+    min-width: 120px;
+  }
+  .avg-pill .val {
+    color: var(--accent);
+    font-size: 14px;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Results */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .result-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .result-card.active {
+    border-color: rgba(74,240,168,0.3);
+    background: var(--accent-dim2);
+  }
+  .result-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .result-value {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+    word-break: break-all;
+  }
+  .result-card.active .result-value { color: var(--accent); }
+  .result-unit {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 3px;
+    font-family: var(--mono);
+  }
+
+  /* Error */
+  .error-box {
+    background: var(--danger-dim);
+    border: 1px solid rgba(255,107,107,0.25);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--danger);
+    display: none;
+    margin-bottom: 12px;
+    font-family: var(--mono);
+  }
+
+  /* Formula */
+  .formula-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    line-height: 2;
+  }
+  .formula-box span { color: var(--text2); }
+
+  /* Pairs badge */
+  .pairs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 10px;
+  }
+  .pairs-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text3);
+  }
+  .pairs-dot.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">Picnómetro de gases · Aire</div>
+  <h1>Densidad de sólidos</h1>
+  <div class="header-sub">Método de expansión · sin corrección</div>
+</div>
+
+<!-- Parámetros -->
+<div class="section" style="margin-top:20px;">
+  <div class="section-label">Parámetros del equipo</div>
+  <div class="card">
+    <div class="field-row">
+      <div class="field">
+        <label>Vc — celda muestra (mL)</label>
+        <input type="number" id="Vc" value="305.3384" step="0.0001" inputmode="decimal" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Vr — referencia (mL)</label>
+        <input type="number" id="Vr" value="147.56293028742" step="0.00001" inputmode="decimal" oninput="calc()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Presiones -->
+<div class="section">
+  <div class="section-label">Lecturas de presión (psi)</div>
+  <div class="card">
+    <table class="p-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>P1 — antes expansión</th>
+          <th>P2 — después expansión</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><input type="number" id="P1a" step="any" inputmode="decimal" placeholder="0.00" oninput="calc()"></td>
+          <td><input type="number" id="P2a" step="any" inputmode="decimal" placeholder="0.00" oninput="calc()"></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><input type="number" id="P1b" step="any" inputmode="decimal" placeholder="0.00" oninput="calc()"></td>
+          <td><input type="number" id="P2b" step="any" inputmode="decimal" placeholder="0.00" oninput="calc()"></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><input type="number" id="P1c" step="any" inputmode="decimal" placeholder="0.00" oninput="calc()"></td>
+          <td><input type="number" id="P2c" step="any" inputmode="decimal" placeholder="0.00" oninput="calc()"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="avg-pills">
+      <div class="avg-pill">P̄1 <span class="val" id="p1avg">— psi</span></div>
+      <div class="avg-pill">P̄2 <span class="val" id="p2avg">— psi</span></div>
+    </div>
+    <div class="pairs-badge">
+      <span class="pairs-dot" id="d1"></span>
+      <span class="pairs-dot" id="d2"></span>
+      <span class="pairs-dot" id="d3"></span>
+      <span id="pairs-txt">0 pares válidos</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Masa -->
+<div class="section">
+  <div class="section-label">Muestra</div>
+  <div class="card">
+    <div class="field-row">
+      <div class="field">
+        <label>Masa (g)</label>
+        <input type="number" id="masa" step="0.0001" inputmode="decimal" placeholder="0.0000" oninput="calc()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Resultados -->
+<div class="section">
+  <div class="section-label">Resultados</div>
+  <div class="error-box" id="err"></div>
+  <div class="results-grid">
+    <div class="result-card" id="card-vs">
+      <div class="result-label">Vs</div>
+      <div class="result-value" id="res-vs">—</div>
+      <div class="result-unit">mL</div>
+    </div>
+    <div class="result-card" id="card-rho">
+      <div class="result-label">Densidad</div>
+      <div class="result-value" id="res-rho">—</div>
+      <div class="result-unit">g/mL</div>
+    </div>
+    <div class="result-card" id="card-masa">
+      <div class="result-label">Masa</div>
+      <div class="result-value" id="res-masa">—</div>
+      <div class="result-unit">g</div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <span>Vs</span> = Vc − Vr · [ P̄2 / (P̄1 − P̄2) ]<br>
+    <span>ρ </span> = masa / Vs
+  </div>
+</div>
+
+<script>
+function g(id){ return parseFloat(document.getElementById(id).value); }
+function s(id,v){ document.getElementById(id).textContent = v; }
+
+function calc(){
+  const Vc = g('Vc'), Vr = g('Vr'), masa = g('masa');
+
+  const raw = [
+    [g('P1a'),g('P2a')],
+    [g('P1b'),g('P2b')],
+    [g('P1c'),g('P2c')]
+  ];
+
+  const valid = raw.map(([p1,p2]) =>
+    !isNaN(p1) && !isNaN(p2) && p1 > p2 && p2 > 0
+  );
+
+  ['d1','d2','d3'].forEach((id,i) => {
+    document.getElementById(id).className = 'pairs-dot' + (valid[i] ? ' on' : '');
+  });
+
+  const pairs = raw.filter((_,i) => valid[i]);
+  const n = pairs.length;
+  s('pairs-txt', n + ' par' + (n === 1 ? ' válido' : 'es válidos'));
+
+  const errBox = document.getElementById('err');
+  errBox.style.display = 'none';
+  ['card-vs','card-rho','card-masa'].forEach(id =>
+    document.getElementById(id).classList.remove('active')
+  );
+
+  if(n === 0){
+    s('p1avg','— psi'); s('p2avg','— psi');
+    s('res-vs','—'); s('res-rho','—'); s('res-masa','—');
+    return;
+  }
+
+  const P1avg = pairs.reduce((a,[p])=>a+p,0)/n;
+  const P2avg = pairs.reduce((a,[,p])=>a+p,0)/n;
+  s('p1avg', P1avg.toFixed(4)+' psi');
+  s('p2avg', P2avg.toFixed(4)+' psi');
+
+  if(isNaN(Vc)||isNaN(Vr)) return;
+
+  const dP = P1avg - P2avg;
+  if(dP <= 0){ return showErr('P̄1 debe ser mayor que P̄2.'); }
+
+  const Vs = Vc - Vr*(P2avg/dP);
+  if(Vs <= 0){ return showErr('Vs ≤ 0. Revisa las presiones o los volúmenes.'); }
+
+  s('res-vs', Vs.toFixed(4));
+  document.getElementById('card-vs').classList.add('active');
+
+  if(!isNaN(masa)){
+    const rho = masa/Vs;
+    s('res-rho', rho.toFixed(4));
+    s('res-masa', masa.toFixed(4));
+    document.getElementById('card-rho').classList.add('active');
+    document.getElementById('card-masa').classList.add('active');
+  } else {
+    s('res-rho','—');
+    s('res-masa','—');
+  }
+}
+
+function showErr(msg){
+  const b = document.getElementById('err');
+  b.textContent = msg; b.style.display = 'block';
+  s('res-vs','—'); s('res-rho','—'); s('res-masa','—');
+}
+
+calc();
+</script>
+</body>
+</html>
